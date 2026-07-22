@@ -261,3 +261,11 @@ Developer pushes code → GitHub → CI/CD Pipeline:
 
 *Document Version: 1.0*
 *Last Updated: July 2026*
+
+
+
+## Limitations
+
+- Background worker is implemented using Node.js instead of Python because of the assignment timeline.
+- Kubernetes manifests are basic and can be extended for production deployment.
+- Future work includes ArgoCD integration, CI/CD pipeline, monitoring, and WebSocket-based live updates.

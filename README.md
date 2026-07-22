@@ -1,6 +1,6 @@
 # AI Task Platform
 
-A production-ready AI Task Processing Platform built with the MERN Stack, Redis + BullMQ for asynchronous task processing, Docker containerization, and Kubernetes-ready deployment.
+An AI Task Processing Platform built with the MERN Stack, Redis, BullMQ, Docker, and Kubernetes-ready deployment.
 
 ## Architecture
 
@@ -39,7 +39,6 @@ Worker (Node process) ──────► MongoDB (updates task status/result)
 | Authentication  | JWT                              |
 | Containerization| Docker + Docker Compose          |
 | Orchestration   | Kubernetes (k3s compatible)      |
-| GitOps          | Argo CD                          |
 
 ## Features
 
@@ -54,7 +53,7 @@ Worker (Node process) ──────► MongoDB (updates task status/result)
 - ✅ Security: Helmet middleware, API rate limiting, no hardcoded secrets
 - ✅ Multi-stage Docker builds running as non-root user
 - ✅ Docker Compose for local development
-- ✅ Kubernetes manifests for production deployment
+- ✅ Kubernetes deployment manifests included as a starting point for deployment.
 - ✅ Argo CD GitOps deployment support
 
 ## Running with Docker Compose (Recommended)
@@ -154,30 +153,34 @@ All containers run as a non-root user with multi-stage builds for optimized imag
 
 ## Kubernetes Deployment
 
-Kubernetes manifests are available in the infrastructure repository. The deployment includes:
-- Dedicated namespace
-- Deployments for backend, worker, frontend
-- Services for each component
-- Ingress configuration
-- ConfigMaps and Secrets
-- Resource requests and limits
-- Liveness and readiness probes
-- Worker scaling support (HPA)
+The project includes basic Kubernetes deployment manifests that can be used as a starting point for deployment.
 
-## GitOps with Argo CD
+The manifests include:
+
+- Namespace
+- Backend Deployment
+- Worker Deployment
+- Frontend Deployment
+- Services
+- ConfigMaps
+- Secrets
+
+## Planned GitOps with Argo CD
+The project architecture is designed to support GitOps deployment using Argo CD. The following steps outline the intended deployment process:
 
 1. Install Argo CD on your Kubernetes cluster
 2. Configure the Application to point to the infrastructure repository
 3. Enable Auto-Sync
 4. The infrastructure repository contains all Kubernetes manifests
 
-## CI/CD Pipeline
+## Planned CI/CD Pipeline
 
-The CI/CD pipeline performs:
+The intended CI/CD pipeline would perform:
+
 1. Run lint checks
 2. Build Docker images
-3. Push images to container registry
-4. Automatically update image tags in the infrastructure repository
+3. Push images to a container registry
+4. Update deployment manifests
 
 ## Project Structure
 
@@ -209,6 +212,36 @@ Ai-Task/
 ├── docker-compose.yml       # Local development
 └── README.md
 ```
+
+
+## Future Improvements
+
+- Python-based background worker
+- WebSocket-based live task updates
+- Monitoring with Prometheus and Grafana
+- Kubernetes production deployment
+- CI/CD automation
+- Argo CD GitOps deployment
+
+
+## AI Assistance Disclosure
+
+This project was designed, implemented, tested, and integrated by me as part of the assignment.
+
+Due to the limited time available for the assignment, I used AI-assisted development tools as a productivity aid for selected tasks.
+
+* Improving and formatting the project documentation (README and Architecture Document).
+* Understanding Docker concepts and preparing initial Docker-related configurations.
+* Assisting with debugging and clarifying implementation approaches during development.
+
+All AI-generated suggestions were carefully reviewed, modified where necessary, tested, and integrated into the final project by me. I take full responsibility for the design, implementation, testing, and final submission of this project.
+
+
+## Author
+
+**Nitesh Verma**
+
+GitHub: https://github.com/Nitesh6387
 
 ## License
 
