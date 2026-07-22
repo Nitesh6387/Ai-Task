@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../api/axios';
 
 export default function TaskCard({ task: initialTask }) {
   const [task, setTask] = useState(initialTask);
   const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    setTask(initialTask);
+  }, [initialTask]);
 
   const getStatusBadge = (status) => {
     const colors = {
