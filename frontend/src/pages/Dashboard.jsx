@@ -18,10 +18,10 @@ export default function Dashboard() {
       const params = { page, limit: 10 };
       if (statusFilter) params.status = statusFilter;
       const { data } = await api.get('/tasks', { params });
-      setTasks(data.tasks);
+      setTasks(data.tasks ?? []);
       setPagination(data.pagination);
     } catch (err) {
-      console.error('Failed to fetch tasks:', err);
+      console.error('Failed to fetch tasks:', err.response.data.message);
     } finally {
       setLoading(false);
     }

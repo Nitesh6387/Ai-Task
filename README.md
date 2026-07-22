@@ -1,0 +1,215 @@
+# AI Task Platform
+
+A production-ready AI Task Processing Platform built with the MERN Stack, Redis + BullMQ for asynchronous task processing, Docker containerization, and Kubernetes-ready deployment.
+
+## Architecture
+
+```
+Frontend (React/Vite, served via nginx)
+         │
+         ▼
+Backend API (Express) ──────► MongoDB (tasks, users)
+         │
+         │ enqueues job
+         ▼
+    Redis (BullMQ queue)
+         │
+         │ worker picks up job
+         ▼
+Worker (Node process) ──────► MongoDB (updates task status/result)
+```
+
+### Components
+
+- **Backend API**: Express.js REST API handling authentication (JWT) and task CRUD operations. Tasks are enqueued to Redis/BullMQ for async processing.
+- **Worker**: Separate Node.js process that consumes tasks from the BullMQ queue, performs text operations (uppercase, lowercase, reverse, wordcount), and updates task status/results in MongoDB.
+- **Redis**: Message broker backing the BullMQ task queue.
+- **MongoDB**: Primary database storing users and tasks with indexed queries.
+- **Frontend**: React.js SPA with authentication, task creation, real-time status updates, and execution logs.
+
+## Tech Stack
+
+| Component       | Technology                       |
+|-----------------|----------------------------------|
+| Frontend        | React.js (Vite)                  |
+| Backend API     | Node.js + Express.js             |
+| Background Worker | Node.js + BullMQ               |
+| Database        | MongoDB                          |
+| Queue           | Redis + BullMQ                   |
+| Authentication  | JWT                              |
+| Containerization| Docker + Docker Compose          |
+| Orchestration   | Kubernetes (k3s compatible)      |
+| GitOps          | Argo CD                          |
+
+## Features
+
+- ✅ User Registration & Login with JWT authentication
+- ✅ Password hashing using bcrypt
+- ✅ Create AI processing tasks with title, input text, and operation type
+- ✅ Supported operations: Uppercase, Lowercase, Reverse String, Word Count
+- ✅ Asynchronous task processing via Redis/BullMQ queue
+- ✅ Real-time task status tracking (Pending → Running → Completed/Failed)
+- ✅ Execution logs for each task
+- ✅ Pagination and status filtering
+- ✅ Security: Helmet middleware, API rate limiting, no hardcoded secrets
+- ✅ Multi-stage Docker builds running as non-root user
+- ✅ Docker Compose for local development
+- ✅ Kubernetes manifests for production deployment
+- ✅ Argo CD GitOps deployment support
+
+## Running with Docker Compose (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/Nitesh6387/Ai-Task.git
+cd Ai-Task
+
+# Start all services
+docker compose up --build
+```
+
+This starts five containers: `mongodb`, `redis`, `backend`, `worker`, `frontend`.
+
+| Service  | URL                    |
+|----------|------------------------|
+| Frontend | http://localhost       |
+| Backend  | http://localhost:5000  |
+| MongoDB  | localhost:27017        |
+| Redis    | localhost:6379         |
+
+## Running Locally without Docker
+
+### Prerequisites
+- Node.js 20+
+- MongoDB running locally (or remote URI)
+- Redis running locally (or remote URL)
+
+### Setup
+
+```bash
+# 1. Backend
+cd backend
+cp .env.example .env
+# Edit .env with your configuration
+npm install
+npm run dev          # Starts API on :5000
+
+# 2. Worker (separate terminal)
+cd backend
+npm run worker       # Starts BullMQ worker
+
+# 3. Frontend (separate terminal)
+cd frontend
+npm install
+npm run dev
+```
+
+### Environment Variables (backend/.env)
+
+| Variable     | Description            | Example                                  |
+|--------------|------------------------|------------------------------------------|
+| `PORT`       | API port               | `5000`                                   |
+| `MONGODB_URI`| MongoDB connection     | `mongodb://localhost:27017/task-platform`|
+| `REDIS_URL`  | Redis connection       | `redis://localhost:6379`                 |
+| `JWT_SECRET` | JWT signing secret     | (any random string)                      |
+| `JWT_EXPIRE` | JWT expiration         | `7d`                                     |
+
+## API Endpoints
+
+### Authentication
+| Method | Endpoint          | Description        | Auth Required |
+|--------|-------------------|--------------------|---------------|
+| POST   | `/api/auth/register` | Register user    | No            |
+| POST   | `/api/auth/login`    | Login user       | No            |
+| GET    | `/api/auth/me`       | Get current user | Yes           |
+
+### Tasks
+| Method | Endpoint       | Description          | Auth Required |
+|--------|----------------|----------------------|---------------|
+| POST   | `/api/tasks`   | Create a new task    | Yes           |
+| GET    | `/api/tasks`   | Get user's tasks     | Yes           |
+| GET    | `/api/tasks/:id` | Get single task    | Yes           |
+| DELETE | `/api/tasks/:id` | Delete a task     | Yes           |
+
+### Health
+| Method | Endpoint        | Description    |
+|--------|-----------------|----------------|
+| GET    | `/api/health`   | Health check   |
+
+## Task Lifecycle
+
+`pending` → `running` (worker picked it up) → `completed` or `failed`
+
+Each task keeps a `logs` array recording each transition, plus `startedAt`/`completedAt` timestamps and an `errorMessage` on failure. Failed jobs are retried automatically up to 3 times (exponential backoff) via BullMQ's `defaultJobOptions`.
+
+## Docker Images
+
+| Service   | Dockerfile                  | Base Image      |
+|-----------|-----------------------------|-----------------|
+| Backend   | `backend/Dockerfile`        | node:20-alpine  |
+| Worker    | `backend/Dockerfile.worker` | node:20-alpine  |
+| Frontend  | `frontend/Dockerfile`       | nginx:alpine    |
+
+All containers run as a non-root user with multi-stage builds for optimized image sizes.
+
+## Kubernetes Deployment
+
+Kubernetes manifests are available in the infrastructure repository. The deployment includes:
+- Dedicated namespace
+- Deployments for backend, worker, frontend
+- Services for each component
+- Ingress configuration
+- ConfigMaps and Secrets
+- Resource requests and limits
+- Liveness and readiness probes
+- Worker scaling support (HPA)
+
+## GitOps with Argo CD
+
+1. Install Argo CD on your Kubernetes cluster
+2. Configure the Application to point to the infrastructure repository
+3. Enable Auto-Sync
+4. The infrastructure repository contains all Kubernetes manifests
+
+## CI/CD Pipeline
+
+The CI/CD pipeline performs:
+1. Run lint checks
+2. Build Docker images
+3. Push images to container registry
+4. Automatically update image tags in the infrastructure repository
+
+## Project Structure
+
+```
+Ai-Task/
+├── backend/
+│   ├── src/
+│   │   ├── config/          # DB and Redis configuration
+│   │   ├── controllers/     # Route handlers
+│   │   ├── middleware/       # Auth middleware
+│   │   ├── models/          # Mongoose schemas
+│   │   ├── queue/           # BullMQ queue setup
+│   │   ├── routes/          # Express routes
+│   │   ├── server.js        # Express app entry
+│   │   └── worker.js        # Background worker
+│   ├── Dockerfile           # Backend container
+│   ├── Dockerfile.worker    # Worker container
+│   └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── api/             # Axios config
+│   │   ├── components/      # React components
+│   │   ├── context/         # Auth context
+│   │   ├── pages/           # Page components
+│   │   ├── App.jsx          # Root component
+│   │   └── main.jsx         # Entry point
+│   ├── Dockerfile           # Frontend container
+│   └── package.json
+├── docker-compose.yml       # Local development
+└── README.md
+```
+
+## License
+
+MIT

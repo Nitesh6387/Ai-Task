@@ -1,12 +1,25 @@
-// Redis is not used in this MERN-only version.
-// Task processing is done synchronously within the backend.
+const IORedis = require('ioredis');
 
-const connectRedis = () => {
-  console.log('Redis disabled - tasks processed synchronously');
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+
+let connection = null;
+
+const getRedisConnection = () => {
+  if (!connection) {
+    connection = new IORedis(REDIS_URL, {
+      maxRetriesPerRequest: null,
+    });
+
+    connection.on('connect', () => {
+      console.log('Redis connected:', REDIS_URL);
+    });
+
+    connection.on('error', (err) => {
+      console.error('Redis connection error:', err.message);
+    });
+  }
+
+  return connection;
 };
 
-const getRedis = () => {
-  throw new Error('Redis not available in MERN-only mode');
-};
-
-module.exports = { connectRedis, getRedis };
+module.exports = { getRedisConnection };

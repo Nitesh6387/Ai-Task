@@ -1,25 +1,5 @@
 const Task = require('../models/Task');
-
-const processTask = (task) => {
-  let result;
-  switch (task.operationType) {
-    case 'uppercase':
-      result = task.inputText.toUpperCase();
-      break;
-    case 'lowercase':
-      result = task.inputText.toLowerCase();
-      break;
-    case 'reverse':
-      result = task.inputText.split('').reverse().join('');
-      break;
-    case 'wordcount':
-      result = task.inputText.trim().split(/\s+/).filter(Boolean).length;
-      break;
-    default:
-      throw new Error(`Unknown operation: ${task.operationType}`);
-  }
-  return result;
-};
+const { addTaskJob } = require('../queue/taskQueue');
 
 exports.createTask = async (req, res) => {
   try {
@@ -34,26 +14,13 @@ exports.createTask = async (req, res) => {
       title,
       inputText,
       operationType,
-      status: 'running',
-      startedAt: new Date(),
-      logs: [{ message: 'Task created and processing started' }],
+      status: 'pending',
+      logs: [{ message: 'Task created and queued for processing' }],
     });
 
-    // Process synchronously
-    try {
-      const result = processTask(task);
-      task.result = result;
-      task.status = 'completed';
-      task.completedAt = new Date();
-      task.logs.push({ message: `Operation ${task.operationType} completed successfully` });
-      await task.save();
-    } catch (processError) {
-      task.status = 'failed';
-      task.errorMessage = processError.message;
-      task.completedAt = new Date();
-      task.logs.push({ message: `Failed: ${processError.message}` });
-      await task.save();
-    }
+    // Hand the job off to Redis/BullMQ. The worker process picks this up
+    // and updates the task document when it's done.
+    await addTaskJob(task._id.toString());
 
     res.status(201).json({ task });
   } catch (error) {
